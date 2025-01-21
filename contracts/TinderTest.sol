@@ -18,8 +18,8 @@ contract Tinder {
         uint count;
     }
     enum Gender {
-        MALE,
-        FEMALE
+        FEMALE,
+        MALE
     }
     enum SwipeStatus {
         UNKNOWN,
@@ -134,6 +134,18 @@ contract Tinder {
             "Messaging allowed only between mutual matches"
         );
         emit sendMessage(msg.sender, _userId, _content);
+    }
+
+    function getUser(address _user) external view returns (Users memory) {
+        require(users[_user].age > 0, "User does not exist");
+        return users[_user];
+    }
+
+    function getSwipeStatus(
+        address _from,
+        address _to
+    ) external view returns (SwipeStatus) {
+        return swipes[_from][_to];
     }
 
     function notEmptyString(string memory _str) internal pure returns (bool) {
