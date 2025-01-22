@@ -1,12 +1,10 @@
-import { Register } from "./components/Register";
+import { Outlet } from "react-router-dom";
 import "./styles/main.scss";
 
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <Register />
-      </header>
+      <Outlet />
     </div>
   );
 }

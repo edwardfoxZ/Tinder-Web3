@@ -3,6 +3,7 @@ import { CityEntries } from "../utils/CityEntries";
 import Select from "react-select";
 import { AiOutlineUpload } from "react-icons/ai";
 import { CiCircleRemove } from "react-icons/ci";
+import { Link } from "react-router-dom";
 
 export const Register = () => {
   const [imageUrl, setImageUrl] = useState(null);
@@ -89,7 +90,7 @@ export const Register = () => {
         <CityEntries />
         <div className="Sign-in-container flex flex-column">
           <button className="Sing-up-btn">Sign up</button>
-          <a href="">you haven't account let's make one</a>
+          <Link to="/log-in">you haven't account let's make one</Link>
           <p>® The privacy has been declared for.</p>
         </div>
       </div>
