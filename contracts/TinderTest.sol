@@ -27,15 +27,31 @@ contract Tinder {
         DISLIKE
     }
 
+    /**
+        All of the mappings gathered here
+        * users to get the users and their identities
+        * userIdsByCity this has a address entry to add each users to their cities
+        * swipes that stored the address to those who...
+    */
+
     mapping(address => Users) private users;
     mapping(bytes32 => mapping(uint => address[])) private userIdsbyCity;
     mapping(address => mapping(address => SwipeStatus)) private swipes;
     mapping(address => SwipeCount) private swipesCount;
 
+    /**
+        All of these events are for tracking the swipes and then when they got match, finally
+        for sending messages.
+    */
+
     event Swiped(address indexed from, address indexed to, SwipeStatus status);
     event Matched(address indexed from, address indexed to);
     event sendMessage(address indexed from, address indexed to, string content);
 
+    /**
+        @dev register can get some arguments to send it to the users mapping which
+        its entry is address.
+    */
     function register(
         uint _age,
         Gender _gender,
@@ -60,6 +76,11 @@ contract Tinder {
         users[msg.sender] = Users(_name, _city, _gender, _age, _picUrl);
         cityUsers.push(msg.sender);
     }
+
+    /**
+	    @dev this function is controling the matchableUsers then show them in a pagination page
+        which who they are male must be Gender to 0(femail) or etc.
+    */
 
     function getMatchableUsers(
         address _userId,
@@ -96,6 +117,12 @@ contract Tinder {
         return _users;
     }
 
+    /**
+	    @dev swipe will get address of users and set them to their interests
+       	if the _status was liked and the other users liked this one it will show
+       	the match users.
+    */
+
     function swipe(
         address _userId,
         SwipeStatus _status
@@ -124,6 +151,10 @@ contract Tinder {
         emit Swiped(msg.sender, _userId, _status);
     }
 
+    /**
+	@dev message only make an emit to send message from sender to receiver.
+    */
+
     function message(
         address _userId,
         string calldata _content
@@ -136,10 +167,19 @@ contract Tinder {
         emit sendMessage(msg.sender, _userId, _content);
     }
 
+    /**
+	@dev getUser tries to get user's address and make sure it is existed
+       	then return that.
+    */
+
     function getUser(address _user) external view returns (Users memory) {
         require(users[_user].age > 0, "User does not exist");
         return users[_user];
     }
+
+    /** 
+	@dev this function is tracking the users' status per swipe.
+    */
 
     function getSwipeStatus(
         address _from,
@@ -148,10 +188,19 @@ contract Tinder {
         return swipes[_from][_to];
     }
 
+    /**
+	@dev make sure the entries of the registeration is going to get
+       	some information.
+    */
+
     function notEmptyString(string memory _str) internal pure returns (bool) {
         bytes memory str = bytes(_str);
         return str.length != 0;
     }
+
+    /**
+	@dev this will find out the ueser's existence.
+    */
 
     modifier userExists(address _userId) {
         require(users[_userId].age > 0, "no users exist");
