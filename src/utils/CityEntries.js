@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import Select from "react-select";
 
-export const CityEntries = () => {
+export const CityEntries = ({ city, setCity }) => {
   const [options, setOptions] = useState([]);
 
   const citiesStyles = {
@@ -62,6 +62,8 @@ export const CityEntries = () => {
       onMenuOpen={() => console.log("Menu opened")}
       className="Select-option"
       styles={citiesStyles}
+      value={city}
+      onChange={(selectedOption) => setCity(selectedOption)}
     />
   );
 };

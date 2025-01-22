@@ -182,6 +182,35 @@ $white-color: #ffffff;
       }
     }
   }
+
+  div {
+    .Connect-btn {
+      position: absolute;
+      top: 33%;
+      left: 62%;
+      padding: 6px;
+      border: none;
+      border-radius: 20px;
+      color: $white-color;
+    }
+    span {
+      .Connect-btn {
+        position: absolute;
+        top: 33%;
+        left: 62%;
+        padding: 6px;
+        border: none;
+        border-radius: 20px;
+        color: $white-color;
+      }
+      .bg-connect-btn {
+        background-color: $bg-to-btn;
+      }
+      .bg-connect-btn-to {
+        background-color: $bg-form;
+      }
+    }
+  }
 }
 
 /* Responsive Design */
