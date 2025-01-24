@@ -8,7 +8,7 @@ export const CityEntries = ({ city, setCity }) => {
   const citiesStyles = {
     menu: (provided) => ({
       ...provided,
-      width: "80%", // Adjust width as needed
+      width: "90%", // Adjust width as needed
       maxHeight: 200,
       overflowY: "auto",
       backgroundColor: "white",
@@ -60,7 +60,7 @@ export const CityEntries = ({ city, setCity }) => {
       isClearable
       placeholder="Search for a city"
       onMenuOpen={() => console.log("Menu opened")}
-      className="Select-option"
+      classNamePrefix="Select-option"
       styles={citiesStyles}
       value={city}
       onChange={(selectedOption) => setCity(selectedOption)}

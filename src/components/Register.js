@@ -6,7 +6,6 @@ import { CiCircleRemove } from "react-icons/ci";
 import { Link } from "react-router-dom";
 import Web3 from "web3";
 import TinderABI from "../contracts/Tinder.json";
-import detectEthereumProvider from "@metamask/detect-provider";
 
 export const Register = () => {
   const [web3Api, setWeb3Api] = useState({
@@ -22,58 +21,89 @@ export const Register = () => {
   const [age, setAge] = useState(18);
   const [sex, setSex] = useState(null);
   const [city, setCity] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
-  useEffect(() => {}, []);
-
-  // get data
-  // console.log(name, age, sex.value, city.value);
-
-  const handleConnect = () => {
+  useEffect(() => {
     const init = async () => {
-      setLoading(!isLoading);
+      try {
+        await window.ethereum.request({ method: "eth_requestAccounts" });
+        const provider = window.ethereum;
 
-      const provider = await detectEthereumProvider();
-      const web3 = new Web3(provider);
+        if (!provider) {
+          console.error("Please install MetaMask!");
+          return;
+        }
 
-      const netId = await web3.eth.net.getId();
-      const deploymentNet = TinderABI.networks[netId];
-      const accounts = await web3.eth.getAccounts();
+        const web3 = new Web3(provider);
+        const accounts = await web3.eth.getAccounts();
+        const netId = await web3.eth.net.getId();
+        const deploymentNet = TinderABI.networks[netId];
 
-      if (!deploymentNet) {
-        console.error("this is not the network id of the deployment");
-        return;
+        if (!deploymentNet) {
+          console.error("Contract not deployed on this network.");
+          return;
+        }
+
+        const contract = new web3.eth.Contract(
+          TinderABI.abi,
+          deploymentNet && deploymentNet.address
+        );
+
+        setWeb3Api({
+          provider,
+          web3,
+          contract,
+          account: accounts[0] || null,
+          isConnect: !!accounts[0],
+        });
+      } catch (error) {
+        console.error("Failed connection:", error);
       }
-      const contract = new web3.eth.Contract(
-        TinderABI.abi,
-        deploymentNet && deploymentNet.address
-      );
+    };
 
-      setWeb3Api({
-        provider: provider,
-        web3: web3,
-        contract: contract,
-        account: accounts[0],
-        isConnect: true,
-      });
-      setLoading(false);
+    init();
+
+    const handleAccountsChanged = (accounts) => {
+      if (accounts.length > 0) {
+        setWeb3Api((prevState) => ({ ...prevState, account: accounts[0] }));
+      } else {
+        setWeb3Api((prevState) => ({ ...prevState, account: null }));
+      }
     };
 
     if (window.ethereum) {
-      init();
+      window.ethereum.on("accountsChanged", handleAccountsChanged);
     }
+
+    return () => {
+      if (window.ethereum) {
+        window.ethereum.removeListener(
+          "accountsChanged",
+          handleAccountsChanged
+        );
+      }
+    };
+  }, []);
+
+  const handleConnect = async () => {
+    const accounts = await window.ethereum.request({
+      method: "eth_requestAccounts",
+    });
+    setWeb3Api((prevState) => ({
+      ...prevState,
+      account: accounts[0],
+      isConnect: true,
+    }));
   };
 
-  console.log(web3Api);
-
   const handleDisconnect = () => {
-    setWeb3Api((prevStates) => ({
-      ...prevStates,
+    setWeb3Api({
       provider: null,
       web3: null,
-      account: null,
       contract: null,
+      account: null,
       isConnect: false,
-    }));
+    });
   };
 
   const handleUploadImage = (event) => {
@@ -88,7 +118,44 @@ export const Register = () => {
     setImageUrl(null);
   };
 
-  const signUp = () => {};
+  const signUp = async () => {
+    setErrorMessage("");
+
+    if (!web3Api.account) {
+      setErrorMessage("Please connect your wallet first.");
+      return;
+    }
+
+    if (!sex) {
+      setErrorMessage("Please select your gender.");
+      return;
+    }
+
+    if (!name.trim()) {
+      setErrorMessage("Please enter your name.");
+      return;
+    }
+
+    if (!city || !city.value || !city.value.trim()) {
+      setErrorMessage("Please select your city.");
+      return;
+    }
+
+    if (!imageUrl) {
+      setErrorMessage("Please upload your profile picture.");
+      return;
+    }
+
+    try {
+      await web3Api.contract.methods
+        .register(age, sex.value, name, city.value, imageUrl)
+        .send({ from: web3Api.account });
+      alert("Registration successful!");
+    } catch (error) {
+      console.error("Failed registration:", error);
+      setErrorMessage("Registration failed. Please try again.");
+    }
+  };
 
   const options = [
     { value: 0, label: "Female" },
@@ -98,7 +165,7 @@ export const Register = () => {
   const genderStyles = {
     menu: (provided) => ({
       ...provided,
-      width: "80%", // Adjust width as needed
+      width: "80%",
       maxHeight: 200,
       overflowY: "auto",
       backgroundColor: "white",
@@ -126,6 +193,7 @@ export const Register = () => {
                   accept="image/*"
                   onChange={handleUploadImage}
                   type="file"
+                  hidden
                 />
                 <label htmlFor="upload-file" className="cursor-pointer">
                   <AiOutlineUpload color="white" fontSize="30px" />
@@ -145,16 +213,23 @@ export const Register = () => {
           </span>
           <h1>Welcome to Tinder</h1>
         </div>
+
+        {errorMessage && (
+          <div className="Errors text-danger" style={{ color: "red" }}>
+            {errorMessage}
+          </div>
+        )}
+
         <div className="Form-detail flex-row">
           <input
-            placeholder="name"
+            placeholder="Name"
             className="input-detail"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
           <input
-            placeholder="age"
+            placeholder="Age"
             className="input-detail"
             type="number"
             value={age}
@@ -163,21 +238,23 @@ export const Register = () => {
           <Select
             className="input-select"
             styles={genderStyles}
-            placeholder="sex"
+            placeholder="Sex"
             options={options}
             isSearchable={false}
             isClearable
-            onChange={(selectedOption) => setSex(selectedOption)}
+            onChange={setSex}
             value={sex}
           />
         </div>
+
         <CityEntries city={city} setCity={setCity} />
+
         <div className="Sign-in-container flex flex-column">
-          <button onClick={() => signUp()} className="Sing-up-btn">
+          <button onClick={signUp} className="Sign-up-btn">
             Sign up
           </button>
-          <Link to="/log-in">you haven't account let's make one</Link>
-          <p>® The privacy has been declared for.</p>
+          <Link to="/log-in">You haven't an account? Let's make one!</Link>
+          <p>® Privacy has been declared.</p>
         </div>
       </div>
 
@@ -192,6 +269,9 @@ export const Register = () => {
                 onClick={handleDisconnect}
               >
                 Disconnect
+                <span style={{ marginLeft: "10px" }}>
+                  {web3Api.account?.slice(0, 6) || "Not connected"}
+                </span>
               </button>
             ) : (
               <button
@@ -205,7 +285,6 @@ export const Register = () => {
             )}
           </span>
         )}
-        <span>{web3Api.account}</span>
       </div>
     </div>
   );

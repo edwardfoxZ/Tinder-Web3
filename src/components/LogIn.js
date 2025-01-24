@@ -1,9 +1,10 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import "../styles/main.scss";
 
 export const LogIn = () => {
   return (
-    <div className="Register flex">
+    <div className="Login flex">
       <div className="Form flex flex-column items-center">
         <div className="Title flex flex-row justify-space-between">
           <h1>Welcome Back to Tinder</h1>
