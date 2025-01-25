@@ -1,21 +1,43 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import "../styles/main.scss";
+import { Connections } from "./Connections";
+import { useWeb3 } from "../context/Web3Context";
 
 export const LogIn = () => {
+  const { web3Api, setConnection, setLoading, isLoading } = useWeb3();
+
+  const navigate = useNavigate();
+
+  const handleLogIn = async () => {
+    setLoading(isLoading);
+    const userAddress = await web3Api.account;
+
+    setLoading(!isLoading);
+
+    navigate(`/${userAddress}-profile`);
+  };
+
   return (
-    <div className="Login flex">
+    <div className="Register flex">
       <div className="Form flex flex-column items-center">
         <div className="Title flex flex-row justify-space-between">
           <h1>Welcome Back to Tinder</h1>
         </div>
-        <div className="Form-detail flex-row"></div>
         <div className="Sign-in-container flex flex-column">
-          <button className="Sing-up-btn">Log In</button>
-          <Link to="/">If you haven't registered sign up for free!</Link>
+          <button onClick={handleLogIn} className="Log-in-btn">
+            Log In
+          </button>
+          <div>
+            <Link to="/Sign-up">
+              If you haven't registered sign up for free!
+            </Link>
+          </div>
           <p>® The privacy has been declared for.</p>
         </div>
       </div>
+
+      <Connections />
     </div>
   );
 };
